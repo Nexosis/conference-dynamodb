@@ -25,6 +25,8 @@ namespace Nexosis.Conference.DynamoDB
         private readonly TextWriter output;
         private readonly Stopwatch stopwatch;
 
+        private int totalCount = 0;
+
         public DynamoBuddy(TextWriter output)
         {
             this.output = output;
@@ -89,8 +91,6 @@ namespace Nexosis.Conference.DynamoDB
 
         public async Task<int> ReadData(int? datasetCount, int? rowCount, bool runParallel, bool useGroupedTable)
         {
-            var grandTotalRecordsRead = 0;
-
             using (var client = new AmazonDynamoDBClient(credentials, config))
             {
                 var seriesKey = $"series000";
@@ -99,7 +99,7 @@ namespace Nexosis.Conference.DynamoDB
                     ? groupedTableName
                     : tableName;
 
-                var totalRecordsRead = 0;
+                var count = 0;
 
                 Dictionary<string, AttributeValue> lastReadKey = null;
 
@@ -121,12 +121,12 @@ namespace Nexosis.Conference.DynamoDB
                     {
                         var response = await client.QueryAsync(request);
 
-                        totalRecordsRead += response.Items.Count;
-                        Interlocked.Add(ref grandTotalRecordsRead, response.Items.Count);
+                        count += response.Items.Count;
+                        Interlocked.Add(ref totalCount, response.Items.Count);
 
-                        await output.WriteLineAsync($"Read {totalRecordsRead} records from dataset '{seriesKey}' in: {tableName}");
+                        await output.WriteLineAsync($"Read {count} records from dataset '{seriesKey}' in: {tableName}");
 
-                        if (response.LastEvaluatedKey.Any() && totalRecordsRead <= rowCount.GetValueOrDefault(int.MaxValue))
+                        if (response.LastEvaluatedKey.Any() && count <= rowCount.GetValueOrDefault(int.MaxValue))
                             lastReadKey = response.LastEvaluatedKey;
                         else
                             break;
@@ -138,7 +138,7 @@ namespace Nexosis.Conference.DynamoDB
                 }
             }
 
-            await output.WriteLineAsync($"Read {grandTotalRecordsRead} total records in {stopwatch.Elapsed}");
+            await output.WriteLineAsync($"Read {totalCount} total records in {stopwatch.Elapsed}");
 
             return 0;
         }
@@ -157,7 +157,7 @@ namespace Nexosis.Conference.DynamoDB
                     ? dataSet.GetRowGroups(rowCount, runContinuous).Select(CreateWriteRequest)
                     : dataSet.GetRows(rowCount, runContinuous).Select(CreateWriteRequest);
 
-                var totalRecordsWritten = 0;
+                var count = 0;
 
                 foreach (var batch in records.Batch(25)) // DynamoDB supports writing 25 records at a time
                 {
@@ -186,13 +186,14 @@ namespace Nexosis.Conference.DynamoDB
                         }
                     }
 
-                    totalRecordsWritten += batch.Count;
+                    count += batch.Count;
+                    Interlocked.Add(ref totalCount, batch.Count);
 
-                    await output.WriteLineAsync($"Wrote {totalRecordsWritten} records from dataset '{dataSet.SeriesKey}' to: {tableName}");
+                    await output.WriteLineAsync($"Wrote {count} records from dataset '{dataSet.SeriesKey}' to: {tableName}");
                 }
             }
 
-            await output.WriteLineAsync($"Wrote all records in {stopwatch.Elapsed}");
+            await output.WriteLineAsync($"Wrote {totalCount} total records in {stopwatch.Elapsed}");
 
             return 0;
         }
