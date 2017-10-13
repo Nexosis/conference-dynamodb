@@ -57,7 +57,7 @@ namespace Nexosis.Conference.DynamoDB
                     var iterationCount = command.Option("-i|--iterations <count>", "count of iterations to execute", CommandOptionType.SingleValue);
                     var runContinuous = command.Option("-c|--continuous", "run continuously until the application is shut down", CommandOptionType.NoValue);
                     var runParallel = command.Option("-p|--parallel", "write each dataset in parallel", CommandOptionType.NoValue);
-                    var usePages = command.Option("-g|--group", "group data into pages", CommandOptionType.NoValue);
+                    var useGroupedTable = command.Option("-g|--group", "group data into pages", CommandOptionType.NoValue);
 
                     command.OnExecute(() => dynamoBuddy.WriteData(
                         GetInt32Value(datasetCount),
@@ -65,7 +65,7 @@ namespace Nexosis.Conference.DynamoDB
                         GetInt32Value(iterationCount),
                         runContinuous.HasValue(),
                         runParallel.HasValue(),
-                        usePages.HasValue()
+                        useGroupedTable.HasValue()
                     ));
                 });
 
@@ -100,7 +100,7 @@ namespace Nexosis.Conference.DynamoDB
             }
         }
 
-        private static int? GetInt32Value(CommandOption option, bool require = true)
+        private static int? GetInt32Value(CommandOption option, bool require = false)
         {
             if (option.HasValue())
             {
