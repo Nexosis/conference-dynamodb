@@ -20,6 +20,7 @@ namespace Nexosis.Conference.DynamoDB
         private static readonly AmazonDynamoDBConfig config = new AmazonDynamoDBConfig
         {
             RegionEndpoint = RegionEndpoint.USEast2,
+            MaxConnectionsPerServer = 10,
         };
 
         private readonly TextWriter output;
@@ -91,7 +92,10 @@ namespace Nexosis.Conference.DynamoDB
 
         public async Task<int> ReadData(int? datasetCount, int? rowCount, bool runParallel, bool useGroupedTable)
         {
-            await ReadSeries(rowCount, $"series000", useGroupedTable);
+            var tasks = Enumerable.Range(0, datasetCount.GetValueOrDefault(1))
+                .Select(i => ReadSeries(rowCount, $"series{i:0000}", useGroupedTable));
+
+            await WhenAll(tasks, runParallel);
 
             await output.WriteLineAsync($"Read {totalCount} total records in {stopwatch.Elapsed}");
 
@@ -147,7 +151,10 @@ namespace Nexosis.Conference.DynamoDB
 
         public async Task<int> WriteData(int? datasetCount, int? rowCount, bool runContinuous, bool runParallel, bool useGroupedTable)
         {
-            await WriteSeries(rowCount, runContinuous, useGroupedTable, $"series000");
+            var tasks = Enumerable.Range(0, datasetCount.GetValueOrDefault(1))
+                .Select(i => WriteSeries(rowCount, runContinuous, useGroupedTable, $"series{i:0000}"));
+
+            await WhenAll(tasks, runParallel);
 
             await output.WriteLineAsync($"Wrote {totalCount} total records in {stopwatch.Elapsed}");
 
@@ -238,6 +245,21 @@ namespace Nexosis.Conference.DynamoDB
                     }
                 }
             };
+        }
+
+        private static async Task WhenAll(IEnumerable<Task> tasks, bool runParallel)
+        {
+            if (runParallel)
+            {
+                // Run the tasks in parallel
+                await Task.WhenAll(tasks);
+            }
+            else
+            {
+                // Run the tasks sequentially
+                foreach (var task in tasks)
+                    await task;
+            }
         }
 
         private async Task CreateTable(AmazonDynamoDBClient client, string tableName, string hashKeyName, string rangeKeyName)

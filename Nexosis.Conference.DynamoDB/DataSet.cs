@@ -6,7 +6,7 @@ namespace Nexosis.Conference.DynamoDB
 {
     class DataSet
     {
-        private const int defaultRowCount = 10000;
+        private const int defaultRowCount = 500;
 
         private static Random random = new Random();
 
