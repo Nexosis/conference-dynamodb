@@ -48,7 +48,6 @@ namespace Nexosis.Conference.DynamoDB
             return 0;
         }
 
-
         public async Task<int> DropTables()
         {
             using (var client = new AmazonDynamoDBClient(credentials, config))
@@ -134,7 +133,7 @@ namespace Nexosis.Conference.DynamoDB
                         count += response.Items.Count;
                         Interlocked.Add(ref totalCount, response.Items.Count);
 
-                        await output.WriteLineAsync($"Read {count} records from dataset '{seriesKey}' in: {tableName}");
+                        await output.WriteLineAsync($"Read {count} records from dataset '{seriesKey}' in: {readFromTableName}");
 
                         if (response.LastEvaluatedKey.Any() && count <= rowCount.GetValueOrDefault(int.MaxValue))
                             lastReadKey = response.LastEvaluatedKey;
@@ -206,7 +205,7 @@ namespace Nexosis.Conference.DynamoDB
                     count += batch.Count;
                     Interlocked.Add(ref totalCount, batch.Count);
 
-                    await output.WriteLineAsync($"Wrote {count} records from dataset '{dataSet.SeriesKey}' to: {tableName}");
+                    await output.WriteLineAsync($"Wrote {count} records from dataset '{dataSet.SeriesKey}' to: {writeToTableName}");
                 }
             }
         }
