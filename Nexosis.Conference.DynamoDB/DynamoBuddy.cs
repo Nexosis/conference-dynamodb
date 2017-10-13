@@ -91,10 +91,16 @@ namespace Nexosis.Conference.DynamoDB
 
         public async Task<int> ReadData(int? datasetCount, int? rowCount, bool runParallel, bool useGroupedTable)
         {
+            await ReadSeries(rowCount, $"series000", useGroupedTable);
+
+            await output.WriteLineAsync($"Read {totalCount} total records in {stopwatch.Elapsed}");
+
+            return 0;
+        }
+        private async Task ReadSeries(int? rowCount, string seriesKey, bool useGroupedTable)
+        {
             using (var client = new AmazonDynamoDBClient(credentials, config))
             {
-                var seriesKey = $"series000";
-
                 var readFromTableName = useGroupedTable
                     ? groupedTableName
                     : tableName;
@@ -137,17 +143,21 @@ namespace Nexosis.Conference.DynamoDB
                     }
                 }
             }
-
-            await output.WriteLineAsync($"Read {totalCount} total records in {stopwatch.Elapsed}");
-
-            return 0;
         }
 
         public async Task<int> WriteData(int? datasetCount, int? rowCount, bool runContinuous, bool runParallel, bool useGroupedTable)
         {
+            await WriteSeries(rowCount, runContinuous, useGroupedTable, $"series000");
+
+            await output.WriteLineAsync($"Wrote {totalCount} total records in {stopwatch.Elapsed}");
+
+            return 0;
+        }
+        private async Task WriteSeries(int? rowCount, bool runContinuous, bool useGroupedTable, string seriesKey)
+        {
             using (var client = new AmazonDynamoDBClient(credentials, config))
             {
-                var dataSet = new DataSet($"series000");
+                var dataSet = new DataSet(seriesKey);
 
                 var writeToTableName = useGroupedTable
                     ? groupedTableName
@@ -192,10 +202,6 @@ namespace Nexosis.Conference.DynamoDB
                     await output.WriteLineAsync($"Wrote {count} records from dataset '{dataSet.SeriesKey}' to: {tableName}");
                 }
             }
-
-            await output.WriteLineAsync($"Wrote {totalCount} total records in {stopwatch.Elapsed}");
-
-            return 0;
         }
 
         private static WriteRequest CreateWriteRequest(Row row)
