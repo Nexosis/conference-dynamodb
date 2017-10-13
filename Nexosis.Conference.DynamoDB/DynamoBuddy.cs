@@ -87,7 +87,7 @@ namespace Nexosis.Conference.DynamoDB
             return 0;
         }
 
-        public async Task<int> ReadData(int? datasetCount, int? iterationCount, bool runContinuous, bool runParallel, bool useGroupedTable)
+        public async Task<int> ReadData(int? datasetCount, int? rowCount, bool runParallel, bool useGroupedTable)
         {
             var grandTotalRecordsRead = 0;
 
@@ -126,7 +126,7 @@ namespace Nexosis.Conference.DynamoDB
 
                         await output.WriteLineAsync($"Read {totalRecordsRead} records from dataset '{seriesKey}' in: {tableName}");
 
-                        if (response.LastEvaluatedKey.Any())
+                        if (response.LastEvaluatedKey.Any() && totalRecordsRead <= rowCount.GetValueOrDefault(int.MaxValue))
                             lastReadKey = response.LastEvaluatedKey;
                         else
                             break;
@@ -143,7 +143,7 @@ namespace Nexosis.Conference.DynamoDB
             return 0;
         }
 
-        public async Task<int> WriteData(int? datasetCount, int? rowCount, int? iterationCount, bool runContinuous, bool runParallel, bool useGroupedTable)
+        public async Task<int> WriteData(int? datasetCount, int? rowCount, bool runContinuous, bool runParallel, bool useGroupedTable)
         {
             using (var client = new AmazonDynamoDBClient(credentials, config))
             {

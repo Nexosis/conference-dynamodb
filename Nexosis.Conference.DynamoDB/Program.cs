@@ -54,7 +54,6 @@ namespace Nexosis.Conference.DynamoDB
 
                     var datasetCount = command.Option("-d|--datasets", "count of datasets to write", CommandOptionType.SingleValue);
                     var rowCount = command.Option("-r|--rows", "count of rows per dataset to write", CommandOptionType.SingleValue);
-                    var iterationCount = command.Option("-i|--iterations <count>", "count of iterations to execute", CommandOptionType.SingleValue);
                     var runContinuous = command.Option("-c|--continuous", "run continuously until the application is shut down", CommandOptionType.NoValue);
                     var runParallel = command.Option("-p|--parallel", "write each dataset in parallel", CommandOptionType.NoValue);
                     var useGroupedTable = command.Option("-g|--group", "group data into pages", CommandOptionType.NoValue);
@@ -62,7 +61,6 @@ namespace Nexosis.Conference.DynamoDB
                     command.OnExecute(() => dynamoBuddy.WriteData(
                         GetInt32Value(datasetCount),
                         GetInt32Value(rowCount),
-                        GetInt32Value(iterationCount),
                         runContinuous.HasValue(),
                         runParallel.HasValue(),
                         useGroupedTable.HasValue()
@@ -75,15 +73,13 @@ namespace Nexosis.Conference.DynamoDB
                     command.HelpOption("-?|-h|--help");
 
                     var datasetCount = command.Option("-d|--datasets", "count of datasets to read", CommandOptionType.SingleValue);
-                    var iterationCount = command.Option("-i|--iterations <count>", "count of iterations to execute", CommandOptionType.SingleValue);
-                    var runContinuous = command.Option("-c|--continuous", "run continuously until the application is shut down", CommandOptionType.NoValue);
+                    var rowCount = command.Option("-r|--rows", "count of rows per dataset to write", CommandOptionType.SingleValue);
                     var runParallel = command.Option("-p|--parallel", "read each dataset in parallel", CommandOptionType.NoValue);
                     var usePages = command.Option("-g|--group", "group data into pages", CommandOptionType.NoValue);
 
                     command.OnExecute(() => dynamoBuddy.ReadData(
                         GetInt32Value(datasetCount),
-                        GetInt32Value(iterationCount),
-                        runContinuous.HasValue(),
+                        GetInt32Value(rowCount),
                         runParallel.HasValue(),
                         usePages.HasValue()
                     ));
