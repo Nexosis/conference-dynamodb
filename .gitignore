@@ -196,3 +196,4 @@ UnitTestErrors.txt
 UnitTestResults.txt
 /model
 /obs
+/Nexosis.Conference.DynamoDB/Properties/launchSettings.json
