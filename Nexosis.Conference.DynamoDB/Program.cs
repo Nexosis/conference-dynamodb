@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.CommandLineUtils;
+﻿using System.Linq;
+using Microsoft.Extensions.CommandLineUtils;
 
 namespace Nexosis.Conference.DynamoDB
 {
@@ -12,7 +13,7 @@ namespace Nexosis.Conference.DynamoDB
             {
                 var dynamoBuddy = new DynamoBuddy(application.Out);
 
-                application.Name = "Nexosis Conference DynamoDB Buddy";
+                application.Name = "dotnet Nexosis.Conference.DynamoDB.dll";
                 application.Description = "Demonstrates various problems and remedies when interacting with Amazon DynamoDB";
                 application.HelpOption("-?|-h|--help");
 
@@ -85,7 +86,12 @@ namespace Nexosis.Conference.DynamoDB
                     ));
                 });
 
-                return application.Execute(args);
+                if (args.Any())
+                    return application.Execute(args);
+
+                application.ShowHelp();
+
+                return 0;
             }
             catch (CommandParsingException cpe)
             {
