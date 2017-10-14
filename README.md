@@ -7,3 +7,6 @@ For usage:
 ```
 dotnet Nexosis.Conference.DynamoDB.dll --help
 ```
+
+In order to use the sample, you will need to set environment variables for your AWS access key ID and secret access key, as described in the link:
+http://docs.aws.amazon.com/cli/latest/userguide/cli-environment.html
